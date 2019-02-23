@@ -22,10 +22,18 @@ If you desire to make a reflection confidence map (0 or 1), use the following co
 ```
 for n subsurface horizons that you want to be represented as a "1" value in the map.
 
+
+To estimate the dielectric constant by depth-correcting a subsurface reflector to a target horizon, use the following command:
+```
+"python est_eps_targ_base.py {horizon_export_file} {region} {subsurface horizon} {surface horizon} {target horizon}"
+```
+
 ## More info:
 
 mars_projections.py: useful projection information and functions for handling Mars projections, particularly those related to SWIM
 
 seisware_horizons.py: defines how to read seisware horizons exports and define a class containing horizon information
 
-make_refl_maps.py: customizes seisware_horizons.py for the SWIM project
+SWIM_horizons.py: customizes "seisware_horizons.py" for the SWIM project, particularly by the addition of the consistency values
+
+make_refl_maps.py: can make reflector consistency maps; also produces simple .csv outputs of individual horizons
