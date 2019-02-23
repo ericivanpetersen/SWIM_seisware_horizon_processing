@@ -10,7 +10,7 @@ numpy, gdal, osgeo, os, sys, csv
 
 To read in Seisware horizons and export csv files for each, use the following command:
 ```
-"python make_refl_maps.py {horizon_export_file} {region}"
+python make_refl_maps.py {horizon_export_file} {region}
 ```
 Where region = onilus, utopia, arcadia, or acidalia.
 
@@ -18,14 +18,14 @@ Where region = onilus, utopia, arcadia, or acidalia.
 
 If you desire to make a reflection confidence map (0 or 1), use the following command:
 ```
-"python make_refl_maps.py {horizon_export_file} {region} {subsurface horizon 1} {subsurface horizon 2} (etc.)"
+python make_refl_maps.py {horizon_export_file} {region} {subsurface horizon 1} {subsurface horizon 2} (etc.)
 ```
 for n subsurface horizons that you want to be represented as a "1" value in the map.
 
 
 To estimate the dielectric constant by depth-correcting a subsurface reflector to a target horizon, use the following command:
 ```
-"python est_eps_targ_base.py {horizon_export_file} {region} {subsurface horizon} {surface horizon} {target horizon}"
+python est_eps_targ_base.py {horizon_export_file} {region} {subsurface horizon} {surface horizon} {target horizon}
 ```
 
 ## More info:
