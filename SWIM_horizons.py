@@ -11,9 +11,9 @@ from seisware_horizons import *
 #import subprocess
 from general_functions import *
 
-
 class swim_horizons(seisware_horizons):
-	"""Class to read, store, and process seisware horizons"""
+	"""Class to read, store, and process seisware horizons,
+		specifically for the SWIM project"""
 
 	def __init__(self, datafile, src, dst=mars_2000):
 		"""Initiate based on seisware horizons class
@@ -95,13 +95,98 @@ class swim_horizons(seisware_horizons):
 
 		write_csv_file(outfile, out_data, out_header)
 
+	def estimate_epsilon_along_track_MOLA_minima(self, sub_horiz, surf_horiz, MOLA_file, filepath='./', orbit_list=[]):
+		"""Function to estimate the real dielectric constant 
+		for subsurface reflectors using the MOLA minima
+		extrapolation method developed in MATLAB by Ali 
+		Bramson. Uses a function called from general_functions.py
+		to do the majority of the heavy lifting.
+
+		:param str sub_horiz: subsurface horizon/reflector to
+			estimate the real dielectric constant for
+		:param str surf_horiz: surface horizon/reflector
+		:param str MOLA_file: filepath to MOLA geotiff
+			file, used to extract MOLA elevation
+		:param str filepath: filepath to export outputs
+		"""
+
+		# Check if filepaths exist, and if not make them
+		figpath = filepath + 'Plots/'
+		if not os.path.exists(filepath):
+			os.makedirs(filepath)
+		if not os.path.exists(figpath):
+			os.makedirs(figpath)
+		
+		# Start writing file for the segments summary:
+		seg_sum_outpath = filepath+sub_horiz + '_summary.csv'
+		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lon','Min1 Lat','Min2 Lon','Min2 Lat']
+		fout = open(seg_sum_outpath, 'wb')
+		seg_sum_fout = csv.writer(fout)
+		seg_sum_fout.writerow(seg_sum_header)
+		
+		# Initialize 
+
+		# Find the orbits which contain the subsurface
+		#	horizon:
+		TWT_sub = self.horizons[sub_horiz]
+		TWT_surf = self.horizons[surf_horiz]
+		isind_sub = np.where( (TWT_sub != -9999.99) & (TWT_sub != np.nan) )
+		if orbit_list == []:
+			orbit_list = np.unique( self.orbit[isind_sub] )
+		# Cycle through those orbits and do the dielectric
+		# 	estimation:
+		OO = np.size(orbit_list)
+		for oo in range(OO):
+			orbind = np.where( (self.orbit == orbit_list[oo]) & (TWT_surf != -9999.99) )
+			epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(orbit_list[oo], self.trace[orbind], self.lat[orbind], self.lon[orbind], TWT_surf[orbind], TWT_sub[orbind], MOLA_file, figpath)
+			if np.size(seg_sum)==11:
+				seg_sum = seg_sum.flatten()
+				seg_sum_fout.writerow(seg_sum)
+			if np.size(seg_sum)>11:
+				seg_sum_fout.writerows(seg_sum)
+			if oo == 0:
+				orball = self.orbit[orbind]
+				traceall = self.trace[orbind]
+				lonall = self.lon[orbind]
+				latall = self.lat[orbind]
+				epsilonall = epsilon
+				z_suball = z_sub
+				TWT_surfall = TWT_surf[orbind]
+				TWT_suball = TWT_sub[orbind]
+			else:
+				orball = np.concatenate( (orball, self.orbit[orbind]), axis=None)
+				traceall = np.concatenate( (traceall, self.trace[orbind]), axis=None)
+				lonall = np.concatenate( (lonall, self.lon[orbind]), axis=None)
+				latall = np.concatenate( (latall, self.lat[orbind]), axis=None)
+				epsilonall = np.concatenate( (epsilonall, epsilon), axis=None)
+				z_suball = np.concatenate( (z_suball, z_sub), axis=None)
+				TWT_surfall = np.concatenate( (TWT_surfall, TWT_surf[orbind]), axis=None)
+				TWT_suball = np.concatenate( (TWT_suball, TWT_sub[orbind]), axis=None)
+		# Median epsilon of whole dataset:
+		med_eps_all = np.nanmedian(epsilonall)
+		print('Median Epsilon for all reflectors = {}').format(med_eps_all)
+		# Depth correct using median epsilon:
+		depth_med_eps = depth_correct_radar(TWT_surfall, TWT_suball, med_eps_all)
+
+		# Prepare dataset for output:
+		ii = np.where( (TWT_suball != -9999.99) & (TWT_suball != np.nan))
+		outdat = np.column_stack((orball[ii], traceall[ii], latall[ii], lonall[ii], epsilonall[ii], depth_med_eps[ii], z_suball[ii], TWT_surfall[ii], TWT_suball[ii]))
+		outhead = ['Orbit', 'Trace', 'Latitude', 'Longitude', 'Epsilon', 'Depth (median eps ='+str(med_eps_all)+')','Z_Sub','TWT surf (ns)','TWT sub (ns)']
+		write_csv_file(filepath+sub_horiz+'_result.csv', outdat, outhead)
 
 if __name__ == '__main__':
+
+	MOLAfile='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
 	
-	datafile = '../Horizon_Export/2019_02_22.txt'
+	datafile = '../Horizon_Export/2019_04_08.txt'
 	filepath = '../Horizon_Export/'
 
 	data = swim_horizons(datafile, onilus)
 #	data.write_horizon_csvs(filepath)
 	#data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
-	data.estimate_epsilon_targ_horiz('plains_sub1_EP','surf_EP','target_base_EP', filepath)
+	#data.estimate_epsilon_targ_horiz('plains_sub1_EP','surf_EP','target_base_EP', filepath)
+
+	# Test MOLA minima method:
+	orbind = np.where((data.orbit == 3550401) & (data.horizons['surf_EP'] != -9999.99))
+	epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(3550401, data.trace[orbind], data.lat[orbind], data.lon[orbind], data.horizons['surf_EP'][orbind], data.horizons['plains_sub1_EP'][orbind], MOLAfile, '../Ali_Dielectric_Code/Plots_SHARAD_Estimations/')
+	print seg_sum

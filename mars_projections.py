@@ -64,9 +64,36 @@ def transform_points(points, src, dst=mars_2000):
 	list of coordinates (points).
 	Input geometries can be in EPSG Code, WKT, or Proj4
 	
-	:param src: Source Geometry
-	:param dst: Destination Geometry
+	:param float points: points to transform
+	:param str src: Source Geometry
+	:param str dst: Destination Geometry
 	"""
 	transform = create_transform(src, dst)
 	points = transform.TransformPoints(points)
 	return points
+
+def transform_XY(x, y, src, dst=mars_2000):
+	"""Same as transform points, but takes individual
+	X & Y arrays as inputs.
+
+	:param float x: x array
+	:param float y: y array
+	:param str src: source geometry
+	:param str dst: destination geometry
+	:output float x2: x coordinates in new geometry
+	:output float y2: y coordinates in new geometry
+	"""
+	xy = []
+	x2 = []
+	y2 = []
+	for nn in range(len(x)):
+		xy.append([x[nn], y[nn]])
+	xy2 = transform_points(xy, src, dst)
+	for nn in range(len(x)):
+		point = xy2[nn]
+		x2.append(point[0])
+		y2.append(point[1])
+	x2 = np.array(x2)
+	y2 = np.array(y2)
+
+	return x2, y2

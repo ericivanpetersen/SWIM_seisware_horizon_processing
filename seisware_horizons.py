@@ -58,8 +58,8 @@ class seisware_horizons(object):
 					horiz_name.append(row[0])
 					picks[row[0]] = []
 				if line_number > n_horiz: 
-					orbit.append(row[0])
-					trace.append(row[1])
+					orbit.append(int(row[0]))
+					trace.append(int(row[1]))
 					X.append(row[2])
 					Y.append(row[3])
 					for i in range(n_horiz):
