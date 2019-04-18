@@ -38,6 +38,13 @@ When the code is running it will provide a MOLA profile of the track in question
 
 In its current form this code is not conducive to doing the work in bite-sized chunks; need to run the whole thing to the end to save the trace-by-trace "_results.csv," for example. Thus I advise talking notes on your inputs as you work through it. And if you do it in chunks using the optional orbit # arguments, be sure to change the output filenames so you don't overwrite them.
 
+Example 1 (Do all SHARAD Orbits):
+```
+python ./est_eps_ATM.py ../Horizon_Export/2019_04_08.txt onilus plains_sub1_EP surf_EP```
+Example 2 (Do only these two SHARAD Orbits, 187301 and 210401:
+```
+python ./est_eps_ATM.py ../Horizon_Export/2019_04_08.txt onilus plains_sub1_EP surf_EP 187301 210401
+```
 ## More info:
 
 mars_projections.py: useful projection information and functions for handling Mars projections, particularly those related to SWIM
