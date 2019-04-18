@@ -42,7 +42,7 @@ Example 1 (Do all SHARAD Orbits):
 ```
 python ./est_eps_ATM.py ../Horizon_Export/2019_04_08.txt onilus plains_sub1_EP surf_EP
 ```
-Example 2 (Do only these two SHARAD Orbits, 187301 and 210401:
+Example 2 (Do only these two SHARAD Orbits, 187301 and 210401):
 ```
 python ./est_eps_ATM.py ../Horizon_Export/2019_04_08.txt onilus plains_sub1_EP surf_EP 187301 210401
 ```
