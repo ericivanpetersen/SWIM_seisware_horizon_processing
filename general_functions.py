@@ -217,8 +217,11 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 		trace1 = np.amin(trace_seg[seg_refl_ind])
 		trace2 = np.amax(trace_seg[seg_refl_ind])
 		center_trace = np.around( (trace2-trace1)/2 ) + trace1
-		center_lon = lon[np.where(trace == center_trace)]
-		center_lat = lat[np.where(trace == center_trace)]
+		center_ind = np.where( np.absolute( trace - center_trace ) == np.amin(np.absolute( trace - center_trace))) #Closest to center, in case that trace has been skipped. 
+		center_lon = lon[center_ind]
+		center_lat = lat[center_ind]
+		center_lon = center_lon[0]
+		center_lat = center_lat[0]
 		# calculate target depths from linear extrapolation between minima:
 		slope = (zmin2 - zmin1) / (lat2 - lat1)
 		z_sub[seg_ind] = zmin1 + slope * (lat[seg_ind] - lat1)
