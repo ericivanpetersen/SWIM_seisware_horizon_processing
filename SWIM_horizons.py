@@ -117,13 +117,6 @@ class swim_horizons(seisware_horizons):
 		if not os.path.exists(figpath):
 			os.makedirs(figpath)
 		
-		# Start writing file for the segments summary:
-		seg_sum_outpath = filepath+sub_horiz + '_summary.csv'
-		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lon','Min1 Lat','Min2 Lon','Min2 Lat']
-		fout = open(seg_sum_outpath, 'wb')
-		seg_sum_fout = csv.writer(fout)
-		seg_sum_fout.writerow(seg_sum_header)
-		
 		# Initialize 
 
 		# Find the orbits which contain the subsurface
@@ -136,15 +129,53 @@ class swim_horizons(seisware_horizons):
 		# Cycle through those orbits and do the dielectric
 		# 	estimation:
 		OO = np.size(orbit_list)
-		for oo in range(OO):
+		print('Number of Orbits = {}').format(OO)
+		# "Bookmark" setting: start from specific orbit
+		orb_success = 0
+		while orb_success == 0:
+			start_orb = input('Orbit start number? (if start from beginning, enter 0): ')
+			if start_orb == 0:
+				oo1 = 0
+				seg_sum_outpath = filepath+sub_horiz + '_summary.csv'
+				result_outpath = filepath+sub_horiz + '_results.csv'
+				depth_result_outpath = filepath+sub_horiz + '_depth_results.csv'
+				orb_success = 1
+			else:
+				oo1 = np.argwhere( orbit_list == start_orb )
+				if np.size(oo1)==0:
+					print("Orbit does not exist; try again")
+				else:
+					seg_sum_outpath = filepath+sub_horiz + '_summary'+str(oo1.flatten())+'.csv'
+					result_outpath = filepath+sub_horiz + '_results'+str(oo1.flatten())+'.csv'
+					depth_result_outpath = filepath+sub_horiz + '_depth_results'+str(oo1.flatten())+'.csv'
+					orb_success = 1
+		OO = np.size(orbit_list)
+		# Start writing file for the segments summary:
+		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lat','Min1 Lon','Min2 Lat','Min2 Lon']
+		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
+		fout1 = open(seg_sum_outpath, 'wb')
+		fout2 = open(result_outpath,'wb')
+		seg_sum_fout = csv.writer(fout1)
+		seg_sum_fout.writerow(seg_sum_header)
+		result_fout = csv.writer(fout2)
+		result_fout.writerow(result_header)
+		for oo in range(oo1,OO):
 			orbind = np.where( (self.orbit == orbit_list[oo]) & (TWT_surf != -9999.99) )
 			epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(orbit_list[oo], self.trace[orbind], self.lat[orbind], self.lon[orbind], TWT_surf[orbind], TWT_sub[orbind], MOLA_file, figpath)
+			# Write data to running results file:
+			if np.size(seg_sum) > 0:
+				lind = np.invert(np.isnan(epsilon))
+				cons = convert_epsilon_to_conf(epsilon[lind])
+				result_rows_out = np.column_stack([self.orbit[orbind][lind], self.trace[orbind][lind], self.lat[orbind][lind], self.lon[orbind][lind], epsilon[lind], cons, z_sub[lind], TWT_surf[orbind][lind], TWT_sub[orbind][lind]])
+				result_fout.writerows(result_rows_out) 
+			# Write data to running summary file:
 			if np.size(seg_sum)==11:
 				seg_sum = seg_sum.flatten()
 				seg_sum_fout.writerow(seg_sum)
 			if np.size(seg_sum)>11:
 				seg_sum_fout.writerows(seg_sum)
-			if oo == 0:
+			# Concatenate data for final depth results output:
+			if oo == oo1:
 				orball = self.orbit[orbind]
 				traceall = self.trace[orbind]
 				lonall = self.lon[orbind]
@@ -172,7 +203,7 @@ class swim_horizons(seisware_horizons):
 		ii = np.where( (TWT_suball != -9999.99) & (TWT_suball != np.nan))
 		outdat = np.column_stack((orball[ii], traceall[ii], latall[ii], lonall[ii], epsilonall[ii], depth_med_eps[ii], z_suball[ii], TWT_surfall[ii], TWT_suball[ii]))
 		outhead = ['Orbit', 'Trace', 'Latitude', 'Longitude', 'Epsilon', 'Depth (median eps ='+str(med_eps_all)+')','Z_Sub','TWT surf (ns)','TWT sub (ns)']
-		write_csv_file(filepath+sub_horiz+'_result.csv', outdat, outhead)
+		write_csv_file(filepath+sub_horiz+'_depth_result.csv', outdat, outhead)
 
 if __name__ == '__main__':
 
