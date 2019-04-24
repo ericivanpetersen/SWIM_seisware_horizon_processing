@@ -213,7 +213,7 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 		lat2 = lat[zmin2_ind]
 		# Find the center of the area where reflectors are mapped:
 		trace_seg = trace[seg_ind]
-		seg_refl_ind = np.where(z_sub[seg_ind] != np.nan)
+		seg_refl_ind = np.invert(np.isnan(TWT_sub[seg_ind]))
 		trace1 = np.amin(trace_seg[seg_refl_ind])
 		trace2 = np.amax(trace_seg[seg_refl_ind])
 		center_trace = np.around( (trace2-trace1)/2 ) + trace1
