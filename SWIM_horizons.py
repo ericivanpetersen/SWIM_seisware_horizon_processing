@@ -26,34 +26,6 @@ class swim_horizons(seisware_horizons):
 
 		super(swim_horizons, self).__init__(datafile, src, dst)
 
-	def make_conf_refl(self, sub_horiz, res, outfile):
-		"""Produces confidence map based on the presence
-		or non-presence of subsurface radar reflectors
-
-		:param str sub_horiz: list of names of mapped 
-			subsurface horizons; must match options
-			found in self.horiz_names
-		:param str outfile: file to write results to
-		"""
-
-		print 
-		print('Producing tif file of reflection confidence value from the following horizons')
-		for horiz in sub_horiz:
-			print('    {}'.format(horiz))
-		print
-
-		conf_refl = np.zeros(self.num_points)
-		num_sub_horiz = len(sub_horiz)
-		for N in range(num_sub_horiz):
-			temp_horiz = self.horizons[sub_horiz[N]]
-			mapped_refl = np.argwhere(temp_horiz != self.nan_const)
-			conf_refl[mapped_refl] = 1
-		
-		self.conf_refl = conf_refl
-
-		convert_xyz_to_raster(self.lon, self.lat, conf_refl, res, 'maximum', outfile)
-
-
 	def estimate_epsilon_targ_horiz(self, sub_horiz, surf_horiz, targ_horiz, filepath='./'):
 		"""Estimates epsilon for a subsurface horizon by
 		prescribing a target horizon, then uses the median dielectric
@@ -196,6 +168,7 @@ class swim_horizons(seisware_horizons):
 		# Median epsilon of whole dataset:
 		med_eps_all = np.nanmedian(epsilonall)
 		print('Median Epsilon for all reflectors = {}').format(med_eps_all)
+		print('Std Epsilon = {}').format(np.nanstd(epsilonall))
 		# Depth correct using median epsilon:
 		depth_med_eps = depth_correct_radar(TWT_surfall, TWT_suball, med_eps_all)
 
@@ -205,19 +178,148 @@ class swim_horizons(seisware_horizons):
 		outhead = ['Orbit', 'Trace', 'Latitude', 'Longitude', 'Epsilon', 'Depth (median eps ='+str(med_eps_all)+')','Z_Sub','TWT surf (ns)','TWT sub (ns)']
 		write_csv_file(filepath+sub_horiz+'_depth_result.csv', outdat, outhead)
 
+	def estimate_epsilon_nearest_plains_elevation(self, sub_horiz, surf_horiz, plains_horiz, filepath):
+		"""Function to estimate real dielectric constant,
+		using a method that  Eric Petersen developed for fast, simple
+		dielectric estimation for LDAs in Deuteronilus Mensae.
+		This function is a relatively faithful reproduction of 
+		the MATLAB script used to estimate dielectric constant 
+		for the GRL paper Petersen et al, 2018.
+		Script finds the nearest plains elevation based on
+		the picked horizons and corrects
+		the subsurface reflector to align with it. Surface 
+		points are not calibrated to MOLA, to avoid issues
+		with off-nadir LDA returns not being well represented
+		by nadir MOLA.
+
+		:param str sub_horiz: subsurface horizon
+		:param str surf_horiz: surface horizon over subsurface horizon
+		:param str plains_horiz: plains horizon located adjacent
+			to LDA/other feature with subsurface horizon
+		"""
+
+		if not os.path.exists(filepath):
+			os.makedirs(filepath)
+		prox_lim = 1500
+		# Prepare to save results:
+		result_outpath = filepath + sub_horiz + '_results.csv'
+		seg_sum_outpath = filepath + sub_horiz + '_summary.csv'
+		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
+		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Lat Plains','Lon Plains','Z_Plains']
+		fout1 = open(seg_sum_outpath, 'wb')
+		fout2 = open(result_outpath, 'wb')
+		seg_sum_fout = csv.writer(fout1)
+		result_fout = csv.writer(fout2)
+		seg_sum_fout.writerow(seg_sum_header)
+		result_fout.writerow(result_header)
+		# Find the orbits with sub_horizon and plains_horizon present:
+		TWT_sub = self.horizons[sub_horiz]
+		TWT_surf = self.horizons[surf_horiz]
+		TWT_plains = self.horizons[plains_horiz]
+		orb_sub = self.orbit[np.where( (TWT_sub != self.nan_const))]
+		orb_plains = self.orbit[np.where( (TWT_plains != self.nan_const))]
+		orb_surf = self.orbit[np.where( (TWT_surf != self.nan_const))]
+		orbit_list = np.intersect1d(orb_sub, orb_plains)
+		orbit_list = np.intersect1d(orbit_list, orb_surf)
+		OO = np.size(orbit_list)
+		print('Number of Orbits = {}').format(OO)
+		# Loop through orbits:
+		oo = 0
+		epsall = []
+		while oo < OO:
+			orb_ind = np.where( self.orbit == orbit_list[oo])
+			z_surf = -0.3 * TWT_surf[orb_ind]/2
+			z_surf_plains = -0.3 * TWT_plains[orb_ind]/2 
+			z_surf = z_surf.flatten()
+			sub_ind = np.where( TWT_sub[orb_ind] != self.nan_const)
+			sub_ind = sub_ind[0]
+			tdiff = np.diff(self.trace[orb_ind][sub_ind]) # trace-length between mapped subsurface horizons
+			TT = np.size(sub_ind) # number of traces with subsurface horizons
+			tt = 0
+			while tt < TT:
+				# Find unbroken segment of reflector:
+				tindend = np.where(tdiff[tt:] != 1)
+				tindend = tindend[0]
+				if np.size(tindend) == 0:
+					trace_ind = np.arange(tt,TT)
+					tt = TT
+				else:
+					trace_ind = np.arange(tt,tindend[0]+tt)
+					tt = tindend[0]+tt+1
+				trace_ind = sub_ind[trace_ind]
+				if np.size(trace_ind) > 0:
+					# Find nearest plains surface which is below elevation of LDA:
+					z_lda_srf_min = np.amin( z_surf[trace_ind] ) # Minimum elevation of LDA surf
+					p_ind1 = np.where( (z_surf_plains < z_lda_srf_min) & ( TWT_plains[orb_ind] != self.nan_const) & (self.trace[orb_ind] < self.trace[orb_ind][trace_ind][0])) #Where the plains reflector mapped at lower elevation than the LDA surface to the left 
+					p_ind2 = np.where( (z_surf_plains < z_lda_srf_min) & (TWT_plains[orb_ind] != self.nan_const) & (self.trace[orb_ind] > self.trace[orb_ind][trace_ind][-1])) #Where the plains reflector mapped at lower elevation than the LDA surface to the right
+					p_ind1 = p_ind1[0]
+					p_ind2 = p_ind2[0]
+					# Special Case for reflectors found near upper plains unit: default to plains near the south for dielectric estimation				
+					if (np.mean( self.lon[orb_ind][trace_ind]) > 25.5) & (np.mean( self.lon[orb_ind][trace_ind]) < 30.5) & (np.mean( self.lat[orb_ind][trace_ind]) > 43.5):
+						p_ind2 = np.where( (z_surf_plains < z_lda_srf_min) & (TWT_plains[orb_ind] != self.nan_const) & (self.lat[orb_ind] < 43.5))
+						p_ind2 = p_ind2[0]
+						p_ind1 = []
+					
+					if (np.size(p_ind1) == 0) & (np.size(p_ind2) == 0):
+						continue
+					elif (np.size(p_ind2) == 0):
+						side = 1 # to the left, to the left
+						prox1 = self.trace[orb_ind][trace_ind][0] - self.trace[orb_ind][p_ind1][-1]
+					elif (np.size(p_ind1) == 0):
+						side = 2 # to the right, to the right
+						prox2 = self.trace[orb_ind][p_ind2][0] - self.trace[orb_ind][trace_ind][-1]
+					else:
+						prox1 = self.trace[orb_ind][trace_ind][0] - self.trace[orb_ind][p_ind1][-1]
+						prox2 = self.trace[orb_ind][p_ind2][0] - self.trace[orb_ind][trace_ind][-1]
+						if prox1 < prox2:
+							side = 1
+						else:
+							side = 2
+					if side == 1:
+						prox = prox1 
+						z_p = z_surf_plains[p_ind1[-1]]
+						lon_p = self.lon[orb_ind][p_ind1[-1]]
+						lat_p = self.lat[orb_ind][p_ind1[-1]]
+					else:
+						prox = prox2
+						z_p = z_surf_plains[p_ind2[0]]
+						lon_p = self.lon[orb_ind][p_ind2[0]]
+						lat_p = self.lat[orb_ind][p_ind2[0]]
+					if prox > prox_lim:
+						continue					
+
+					depth = z_surf[trace_ind] - z_p
+					depth = depth.flatten()
+					eps = estimate_epsilon( TWT_surf[orb_ind][trace_ind], TWT_sub[orb_ind][trace_ind], depth)
+					cons = convert_epsilon_to_conf(eps)
+					# Save results summary:
+					if (np.nanmedian(eps) < 12) & (np.nanmedian(eps)>1) & (np.nanstd(eps)<10):
+						print('Line {0}; Epsilon = {1}').format(orbit_list[oo],np.nanmedian(eps))
+						epsall = np.concatenate( (epsall, eps), axis=None)
+						center_lon = np.mean(self.lon[orb_ind][trace_ind])
+						center_lat = np.mean(self.lat[orb_ind][trace_ind])
+						seg_sum = [orbit_list[oo], center_lat, center_lon, np.nanmedian(eps), np.nanmean(eps), np.nanstd(eps), np.subtract(*np.nanpercentile(eps, [75, 25])), lat_p, lon_p, z_p]
+						seg_sum_fout.writerow(seg_sum)
+
+						# Save results:	
+						seg_res = np.column_stack([self.orbit[orb_ind][trace_ind], self.trace[orb_ind][trace_ind], self.lat[orb_ind][trace_ind], self.lon[orb_ind][trace_ind], eps, cons, z_surf[trace_ind]-depth, TWT_surf[orb_ind][trace_ind], TWT_sub[orb_ind][trace_ind]])
+						result_fout.writerows(seg_res)
+			oo = oo+1
+		print('Median Epsilon = {}').format(np.median(epsall)) 
+		print('Mean Epsilon = {}').format(np.mean(epsall))
+		print('Stdev Epsilon = {}').format(np.std(epsall))
+		print('Max Epsilon = {}').format(np.amax(epsall))
+				
 if __name__ == '__main__':
 
 	MOLAfile='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
 	
 	datafile = '../Horizon_Export/2019_04_08.txt'
-	filepath = '../Horizon_Export/'
+	filepath = '../Horizon_Export/Dielectric_NPE/'
 
 	data = swim_horizons(datafile, onilus)
-#	data.write_horizon_csvs(filepath)
-	#data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
-	#data.estimate_epsilon_targ_horiz('plains_sub1_EP','surf_EP','target_base_EP', filepath)
-
-	# Test MOLA minima method:
-	orbind = np.where((data.orbit == 3550401) & (data.horizons['surf_EP'] != -9999.99))
-	epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(3550401, data.trace[orbind], data.lat[orbind], data.lon[orbind], data.horizons['surf_EP'][orbind], data.horizons['plains_sub1_EP'][orbind], MOLAfile, '../Ali_Dielectric_Code/Plots_SHARAD_Estimations/')
-	print seg_sum
+	data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','surf_EP',filepath)
+	data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
+	data.depth_correct('up_sub1_EP','surf_EP',4,filepath)
+	data.depth_correct('plains_sub1_EP','surf_EP',3.7,filepath)
+	data.depth_correct('plains_sub1_EP','surf_EP',5.2,filepath)
