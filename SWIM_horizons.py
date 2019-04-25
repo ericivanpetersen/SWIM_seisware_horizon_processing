@@ -314,8 +314,8 @@ if __name__ == '__main__':
 
 	MOLAfile='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
 	
-	datafile = '../Horizon_Export/2019_04_08.txt'
-	filepath = '../Horizon_Export/Dielectric_NPE/'
+	datafile = '../Horizon_Export/test_file.txt'
+	filepath = '../Horizon_Export/test/'
 
 	data = swim_horizons(datafile, onilus)
 	data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','surf_EP',filepath)
