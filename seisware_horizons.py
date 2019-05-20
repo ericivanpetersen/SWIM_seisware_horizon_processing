@@ -90,7 +90,7 @@ class seisware_horizons(object):
 		self.horizons = picks
 		self.num_points = len(self.X)
 	
-		print
+		print()
 		print('Read in Seisware File {}'.format(datafile))
 		print('Number of Radargrams: {}'.format(len(set(self.orbit))))
 		print('Number of Points: {}'.format(self.num_points))
@@ -110,8 +110,8 @@ class seisware_horizons(object):
 			where to save the horizon files; default is
 			'./' for current folder.
 		"""
-		print 
-		print 'Saving Horizon Files'
+		print()
+		print('Saving Horizon Files')
 		for horiz in self.horiz_names:
 			# Index to select only non-nan data:
 			ind = (self.horizons[horiz] != self.nan_const)
@@ -143,13 +143,13 @@ class seisware_horizons(object):
 
 		outfile = filepath + sub_horiz + '_depth_' + str(epsilon) + '.csv'
 
-		print
+		print()
 		print('Depth-corrected {0} using epsilon = {1}'.format(sub_horiz, epsilon))
 		print('Median depth = {}'.format(np.median(depth)))
 		print('Saving as {}'.format(outfile))
 		print('Number of Radargrams = {}'.format(len(set(self.orbit[ind]))))
 		print('Number of Points = {}'.format(len(self.orbit[ind])))
-		print
+		print()
 
 		out_header = ['Orbit', 'Trace', 'Latitude', 'Longitude', 'Depth', 'TWT surf (ns)', 'TWT sub (ns)']
 		out_data = np.column_stack((self.orbit[ind], self.trace[ind], self.lat[ind], self.lon[ind], depth, surf[ind], sub[ind]))

@@ -16,7 +16,7 @@ def write_csv_file(outfile, data, header=None):
 		write to csv file
 	"""
 	
-	with open(outfile, 'wb') as fout:
+	with open(outfile, 'w') as fout:
 		writer = csv.writer(fout)
 		if header:    writer.writerow(header)
 		writer.writerows(data)
@@ -47,7 +47,7 @@ def extract_raster_profile(x, y, rasterfile):
 		z[nn] = layer.GetRasterBand(1).ReadAsArray(rasterx[nn], rastery[nn], 1, 1)
 	return z
 
-def extract_MOLA_profile(lon, lat, rasterfile='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'):
+def extract_MOLA_profile(lon, lat, rasterfile='../mola_data/dem/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'):
 	"""Extract topographic profile of MOLA elevations
 	based on input Latitude & Longitude values.
 
@@ -158,8 +158,8 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 	z_sub_eps1 = z_sub_eps1.squeeze()
 	z_sub = np.full(np.size(z_surf), np.nan)
 	epsilon = np.full(np.size(z_surf), np.nan)
-	print
-	print('Dielectric Estimation for SHARAD Line {}').format(orbit)
+	print()
+	print('Dielectric Estimation for SHARAD Line {}'.format(orbit))
 	print('Examine graph and determine # of desired line segments')
 	print('        to define between observed minima in the MOLA profile,')
 	print('	       as well as the range in latitude for each minima.')
@@ -178,7 +178,7 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 	plt.show()
 
 	# ask for inputs on range to search for minima:
-	num_seg = input("Number of Segments Between Minima? (if profile insufficient to estimate minima, enter '0') ")
+	num_seg = int(input("Number of Segments Between Minima? (if profile insufficient to estimate minima, enter '0') "))
 	if num_seg == 0:
 		return non_result, non_result, []
 	# initialize segment summary array, which includes statistical
@@ -187,15 +187,15 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 
 	nn = 0
 	while nn < num_seg:
-		print
-		print('Input minima ranges for line segment {}').format(nn+1)
-		lat_min_1a = input("Start point to search for first minima: ")
+		print()
+		print('Input minima ranges for line segment {}'.format(nn+1))
+		lat_min_1a = float(input("Start point to search for first minima: "))
 		# if entered "0", exit the program, return nans:
 		if lat_min_1a == 0 :
 			return non_result, non_result, []
-		lat_min_1b = input("  End point to search for first minima: ")
-		lat_min_2a = input("Start point to search for second minima: ")
-		lat_min_2b = input("  End point to search for second minima: ")
+		lat_min_1b = float(input("  End point to search for first minima: "))
+		lat_min_2a = float(input("Start point to search for second minima: "))
+		lat_min_2b = float(input("  End point to search for second minima: "))
 		# find desired local minima in elevation for those latitude ranges:
 		minrange1 = np.where( (lat > lat_min_1a) & (lat < lat_min_1b) )
 		minrange2 = np.where( (lat > lat_min_2a) & (lat < lat_min_2b) )
@@ -228,7 +228,7 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 		# calculate estimated dielectric constant epsilon:
 		epsilon[seg_ind] = estimate_epsilon(TWT_surf[seg_ind], TWT_sub[seg_ind], (z_surf[seg_ind]-z_sub[seg_ind]))
 		# Plot the profile again, with results:
-		print('Median Epsilon = {}').format(np.nanmedian(epsilon[seg_ind]))
+		print('Median Epsilon = {}'.format(np.nanmedian(epsilon[seg_ind])))
 		fig = plt.figure(2)
 		plt.subplot(211)
 		plt.title(str(orbit)+': Real Dielectric Estimation')
@@ -243,7 +243,7 @@ def estimate_epsilon_MOLA_minima_extrapolation(orbit, trace, lat, lon, TWT_surf,
 		plt.xlabel('Latitude')
 		plt.show()
 
-		result = raw_input("Satisfied with segment? (y=yes, n=no, r=retry, ra=retry all) ")
+		result = input("Satisfied with segment? (y=yes, n=no, r=retry, ra=retry all) ")
 		if result == 'y':
 			# Save segment summary results:
 			seg_sum[nn,0] = orbit
@@ -303,4 +303,4 @@ if __name__ == '__main__':
 	lat = 40 + np.arange(11)
 	#d = np.sqrt( x**2 + y**2)
 	z = extract_MOLA_profile(lat, lon)
-	print z
+	print(z)

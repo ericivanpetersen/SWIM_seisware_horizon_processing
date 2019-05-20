@@ -47,7 +47,7 @@ class swim_horizons(seisware_horizons):
 		conf = convert_epsilon_to_conf(epsilon)
 		eps_med = np.median(epsilon)
 		eps_std = np.std(epsilon)
-		print
+		print()
 		print('Estimating epsilon for horizon {}'.format(sub_horiz))
 		print('Median Epsilon = {}'.format(eps_med))
 		print('StDev = {}'.format(eps_std))
@@ -101,12 +101,12 @@ class swim_horizons(seisware_horizons):
 		# Cycle through those orbits and do the dielectric
 		# 	estimation:
 		OO = np.size(orbit_list)
-		print('Number of Orbits = {}').format(OO)
+		print('Number of Orbits = {}'.format(OO))
 		# "Bookmark" setting: start from specific orbit
 		orb_success = 0
 		while orb_success == 0:
 			start_orb = input('Orbit start number? (if start from beginning, enter 0): ')
-			if start_orb == 0:
+			if int(start_orb) == 0:
 				oo1 = 0
 				seg_sum_outpath = filepath+sub_horiz + '_summary.csv'
 				result_outpath = filepath+sub_horiz + '_results.csv'
@@ -125,8 +125,8 @@ class swim_horizons(seisware_horizons):
 		# Start writing file for the segments summary:
 		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lat','Min1 Lon','Min2 Lat','Min2 Lon']
 		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
-		fout1 = open(seg_sum_outpath, 'wb')
-		fout2 = open(result_outpath,'wb')
+		fout1 = open(seg_sum_outpath, 'w')
+		fout2 = open(result_outpath,'w')
 		seg_sum_fout = csv.writer(fout1)
 		seg_sum_fout.writerow(seg_sum_header)
 		result_fout = csv.writer(fout2)
@@ -167,8 +167,8 @@ class swim_horizons(seisware_horizons):
 				TWT_suball = np.concatenate( (TWT_suball, TWT_sub[orbind]), axis=None)
 		# Median epsilon of whole dataset:
 		med_eps_all = np.nanmedian(epsilonall)
-		print('Median Epsilon for all reflectors = {}').format(med_eps_all)
-		print('Std Epsilon = {}').format(np.nanstd(epsilonall))
+		print('Median Epsilon for all reflectors = {}'.format(med_eps_all))
+		print('Std Epsilon = {}'.format(np.nanstd(epsilonall)))
 		# Depth correct using median epsilon:
 		depth_med_eps = depth_correct_radar(TWT_surfall, TWT_suball, med_eps_all)
 
@@ -206,8 +206,8 @@ class swim_horizons(seisware_horizons):
 		seg_sum_outpath = filepath + sub_horiz + '_summary.csv'
 		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
 		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Lat Plains','Lon Plains','Z_Plains']
-		fout1 = open(seg_sum_outpath, 'wb')
-		fout2 = open(result_outpath, 'wb')
+		fout1 = open(seg_sum_outpath, 'w')
+		fout2 = open(result_outpath, 'w')
 		seg_sum_fout = csv.writer(fout1)
 		result_fout = csv.writer(fout2)
 		seg_sum_fout.writerow(seg_sum_header)
@@ -222,7 +222,7 @@ class swim_horizons(seisware_horizons):
 		orbit_list = np.intersect1d(orb_sub, orb_plains)
 		orbit_list = np.intersect1d(orbit_list, orb_surf)
 		OO = np.size(orbit_list)
-		print('Number of Orbits = {}').format(OO)
+		print('Number of Orbits = {}'.format(OO))
 		# Loop through orbits:
 		oo = 0
 		epsall = []
@@ -294,7 +294,7 @@ class swim_horizons(seisware_horizons):
 					cons = convert_epsilon_to_conf(eps)
 					# Save results summary:
 					if (np.nanmedian(eps) < 12) & (np.nanmedian(eps)>1) & (np.nanstd(eps)<10):
-						print('Line {0}; Epsilon = {1}').format(orbit_list[oo],np.nanmedian(eps))
+						print('Line {0}; Epsilon = {1}'.format(orbit_list[oo],np.nanmedian(eps)))
 						epsall = np.concatenate( (epsall, eps), axis=None)
 						center_lon = np.mean(self.lon[orb_ind][trace_ind])
 						center_lat = np.mean(self.lat[orb_ind][trace_ind])
@@ -305,14 +305,14 @@ class swim_horizons(seisware_horizons):
 						seg_res = np.column_stack([self.orbit[orb_ind][trace_ind], self.trace[orb_ind][trace_ind], self.lat[orb_ind][trace_ind], self.lon[orb_ind][trace_ind], eps, cons, z_surf[trace_ind]-depth, TWT_surf[orb_ind][trace_ind], TWT_sub[orb_ind][trace_ind]])
 						result_fout.writerows(seg_res)
 			oo = oo+1
-		print('Median Epsilon = {}').format(np.median(epsall)) 
-		print('Mean Epsilon = {}').format(np.mean(epsall))
-		print('Stdev Epsilon = {}').format(np.std(epsall))
-		print('Max Epsilon = {}').format(np.amax(epsall))
+		print('Median Epsilon = {}'.format(np.median(epsall))) 
+		print('Mean Epsilon = {}'.format(np.mean(epsall)))
+		print('Stdev Epsilon = {}'.format(np.std(epsall)))
+		print('Max Epsilon = {}'.format(np.amax(epsall)))
 				
 if __name__ == '__main__':
 
-	MOLAfile='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
+	MOLAfile='../mola_data/dem/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
 	
 	datafile = '../Horizon_Export/test_file.txt'
 	filepath = '../Horizon_Export/test/'
