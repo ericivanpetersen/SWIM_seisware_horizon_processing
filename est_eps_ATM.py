@@ -4,10 +4,18 @@ from mars_projections import *
 from SWIM_horizons import *
 
 # Path to MOLA geotiff file; must be changed if using script on new or different computer:
-MOLA_file='../mola_data/dem/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
+MOLA_file='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
 
 def main():
 	# Usage: python ./est_eps_ATM.py {horizon file} {region} {sub_horiz} {surf_horiz} {Optional Arg: Orbit List}
+
+	# Test if MOLA File exists, as hardwired into the script:
+	file_exists = os.path.isfile(MOLA_file)
+	if file_exists:
+		print("MOLA File Found")
+	else:
+		print("ERROR: MOLA file not found; edit MOLA_file variable in script")
+		return 
 
 	#Test for correct number of inputs:
 	if len(sys.argv) < 5:

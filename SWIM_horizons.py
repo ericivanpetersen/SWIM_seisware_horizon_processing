@@ -7,8 +7,6 @@ import sys
 import csv
 from mars_projections import *
 from seisware_horizons import *
-#import gdal_merge
-#import subprocess
 from general_functions import *
 
 class swim_horizons(seisware_horizons):
@@ -25,6 +23,21 @@ class swim_horizons(seisware_horizons):
 		"""
 
 		super(swim_horizons, self).__init__(datafile, src, dst)
+
+	def combine_horizons(self, horiz1, horiz2, new_horiz_name):
+		"""
+		Simple method to combine two horizons into a new
+		horizon, defaulting to horizon 1 when both
+		horizons contain data at the same point.
+
+		:param str horiz1: name of horizon 1
+		:param str horiz2: name of horizon 2
+		:param str new_horiz_name: name of new horizon
+		"""
+
+		tmp = self.horizons[horiz1]
+		tmp[(tmp == self.nan_const)] = self.horizons[horiz2][tmp == self.nan_const]
+		self.horizons[new_horiz_name] = tmp
 
 	def estimate_epsilon_targ_horiz(self, sub_horiz, surf_horiz, targ_horiz, filepath='./'):
 		"""Estimates epsilon for a subsurface horizon by
@@ -67,7 +80,7 @@ class swim_horizons(seisware_horizons):
 
 		write_csv_file(outfile, out_data, out_header)
 
-	def estimate_epsilon_along_track_MOLA_minima(self, sub_horiz, surf_horiz, MOLA_file, filepath='./', orbit_list=[]):
+	def estimate_epsilon_along_track_linear(self, sub_horiz, surf_horiz, MOLA_file, filepath='./', orbit_list=[], method="minima"):
 		"""Function to estimate the real dielectric constant 
 		for subsurface reflectors using the MOLA minima
 		extrapolation method developed in MATLAB by Ali 
@@ -97,7 +110,11 @@ class swim_horizons(seisware_horizons):
 		TWT_surf = self.horizons[surf_horiz]
 		isind_sub = np.where( (TWT_sub != -9999.99) & (TWT_sub != np.nan) )
 		if orbit_list == []:
+			print("Compiling Orbit List")
 			orbit_list = np.unique( self.orbit[isind_sub] )
+			print(orbit_list)
+			orbit_outpath = filepath + 'orbit_list.csv'
+			np.savetxt(orbit_outpath, orbit_list, '%d')
 		# Cycle through those orbits and do the dielectric
 		# 	estimation:
 		OO = np.size(orbit_list)
@@ -113,7 +130,8 @@ class swim_horizons(seisware_horizons):
 				depth_result_outpath = filepath+sub_horiz + '_depth_results.csv'
 				orb_success = 1
 			else:
-				oo1 = np.argwhere( orbit_list == start_orb )
+				oo1 = np.argwhere( orbit_list == int(start_orb) )[0][0]
+				print(oo1)
 				if np.size(oo1)==0:
 					print("Orbit does not exist; try again")
 				else:
@@ -123,8 +141,12 @@ class swim_horizons(seisware_horizons):
 					orb_success = 1
 		OO = np.size(orbit_list)
 		# Start writing file for the segments summary:
-		seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lat','Min1 Lon','Min2 Lat','Min2 Lon']
+		if method=="minima":
+			seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Min1 Lat','Min1 Lon','Min2 Lat','Min2 Lon']
 		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
+		if method=="polyfit":
+			seg_sum_header = ['Orbit','Center Lat','Center Lon','Median Eps','Mean Eps','Std Eps','IQR Eps','Trace 1 Fit','Trace 2 Fit','Trace 3 Extrap']
+			result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Eps_MOLA','Cons_MOLA','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
 		fout1 = open(seg_sum_outpath, 'w')
 		fout2 = open(result_outpath,'w')
 		seg_sum_fout = csv.writer(fout1)
@@ -133,12 +155,19 @@ class swim_horizons(seisware_horizons):
 		result_fout.writerow(result_header)
 		for oo in range(oo1,OO):
 			orbind = np.where( (self.orbit == orbit_list[oo]) & (TWT_surf != -9999.99) )
-			epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(orbit_list[oo], self.trace[orbind], self.lat[orbind], self.lon[orbind], TWT_surf[orbind], TWT_sub[orbind], MOLA_file, figpath)
+			if method=="minima":
+				epsilon, z_sub, seg_sum = estimate_epsilon_MOLA_minima_extrapolation(orbit_list[oo], self.trace[orbind], self.lat[orbind], self.lon[orbind], TWT_surf[orbind], TWT_sub[orbind], MOLA_file, figpath)
+			if method=="polyfit":
+				epsilon, z_sub, seg_sum, eps_MOLA = estimate_epsilon_MOLA_polyfit(orbit_list[oo], self.trace[orbind], self.lat[orbind], self.lon[orbind], TWT_surf[orbind], TWT_sub[orbind], MOLA_file, figpath)
 			# Write data to running results file:
 			if np.size(seg_sum) > 0:
 				lind = np.invert(np.isnan(epsilon))
 				cons = convert_epsilon_to_conf(epsilon[lind])
-				result_rows_out = np.column_stack([self.orbit[orbind][lind], self.trace[orbind][lind], self.lat[orbind][lind], self.lon[orbind][lind], epsilon[lind], cons, z_sub[lind], TWT_surf[orbind][lind], TWT_sub[orbind][lind]])
+				if method == "minima":
+					result_rows_out = np.column_stack([self.orbit[orbind][lind], self.trace[orbind][lind], self.lat[orbind][lind], self.lon[orbind][lind], epsilon[lind], cons, z_sub[lind], TWT_surf[orbind][lind], TWT_sub[orbind][lind]])
+				if method == "polyfit":
+					cons_MOLA = convert_epsilon_to_conf(eps_MOLA[lind])
+					result_rows_out = np.column_stack([self.orbit[orbind][lind], self.trace[orbind][lind], self.lat[orbind][lind], self.lon[orbind][lind], epsilon[lind], cons, eps_MOLA[lind], cons_MOLA, z_sub[lind], TWT_surf[orbind][lind], TWT_sub[orbind][lind]])
 				result_fout.writerows(result_rows_out) 
 			# Write data to running summary file:
 			if np.size(seg_sum)==11:
@@ -178,7 +207,11 @@ class swim_horizons(seisware_horizons):
 		outhead = ['Orbit', 'Trace', 'Latitude', 'Longitude', 'Epsilon', 'Depth (median eps ='+str(med_eps_all)+')','Z_Sub','TWT surf (ns)','TWT sub (ns)']
 		write_csv_file(filepath+sub_horiz+'_depth_result.csv', outdat, outhead)
 
-	def estimate_epsilon_nearest_plains_elevation(self, sub_horiz, surf_horiz, plains_horiz, filepath):
+	def estimate_epsilon_along_track_MOLA_minima(self, sub_horiz, surf_horiz, MOLA_file, filepath='./', orbit_list=[]):
+		
+		self.estimate_epsilon_along_track_linear(sub_horiz, surf_horiz, MOLA_file, filepath, orbit_list, method="minima")
+
+	def estimate_epsilon_nearest_plains_elevation(self, sub_horiz, surf_horiz, plains_horiz, filepath, orbit_list=[]):
 		"""Function to estimate real dielectric constant,
 		using a method that  Eric Petersen developed for fast, simple
 		dielectric estimation for LDAs in Deuteronilus Mensae.
@@ -196,12 +229,18 @@ class swim_horizons(seisware_horizons):
 		:param str surf_horiz: surface horizon over subsurface horizon
 		:param str plains_horiz: plains horizon located adjacent
 			to LDA/other feature with subsurface horizon
+		:param str filepath: filepath to save results to
 		"""
 
+		#Hard-coded limit on how far away "nearest plains elevation"
+		#	can be and still be accepted.
+		prox_lim = 1500
+
+		# If folder for saving results doesn't exist, make it:
 		if not os.path.exists(filepath):
 			os.makedirs(filepath)
-		prox_lim = 1500
-		# Prepare to save results:
+
+		# Prepare to save results, to a raw results file as well as a summary file:
 		result_outpath = filepath + sub_horiz + '_results.csv'
 		seg_sum_outpath = filepath + sub_horiz + '_summary.csv'
 		result_header = ['Orbit','Trace','Latitude','Longitude','Epsilon','Cons','Z_Sub','TWT_surf (ns)','TWT_sub (ns)']
@@ -219,8 +258,11 @@ class swim_horizons(seisware_horizons):
 		orb_sub = self.orbit[np.where( (TWT_sub != self.nan_const))]
 		orb_plains = self.orbit[np.where( (TWT_plains != self.nan_const))]
 		orb_surf = self.orbit[np.where( (TWT_surf != self.nan_const))]
-		orbit_list = np.intersect1d(orb_sub, orb_plains)
-		orbit_list = np.intersect1d(orbit_list, orb_surf)
+		if orbit_list==[]:
+			orbit_list = np.intersect1d(orb_sub, orb_plains)
+			orbit_list = np.intersect1d(orbit_list, orb_surf)
+			orbit_outpath = filepath + 'orbit_list.csv'
+			np.savetxt(orbit_outpath, orbit_list, '%d')
 		OO = np.size(orbit_list)
 		print('Number of Orbits = {}'.format(OO))
 		# Loop through orbits:
@@ -312,14 +354,24 @@ class swim_horizons(seisware_horizons):
 				
 if __name__ == '__main__':
 
-	MOLAfile='../mola_data/dem/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
-	
-	datafile = '../Horizon_Export/test_file.txt'
-	filepath = '../Horizon_Export/test/'
+	MOLA_file='/Users/eric/Documents/orig/supl/MOLA/DEM_global_mola128ppd_merged_mola64ppd/mola128_mola64_merge_90Nto90S_SimpleC_clon0.tif'
+	datafile = '../../Horizon_Export/Box2/box2_2020_02_24.txt'
+	#datafile = '../../Horizon_Export/2019_04_08.txt'
+	filepath = '../../Horizon_Export/Box2/'
 
-	data = swim_horizons(datafile, onilus)
-	data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','surf_EP',filepath)
-	data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
-	data.depth_correct('up_sub1_EP','surf_EP',4,filepath)
-	data.depth_correct('plains_sub1_EP','surf_EP',3.7,filepath)
-	data.depth_correct('plains_sub1_EP','surf_EP',5.2,filepath)
+	data = swim_horizons(datafile, box2)
+#	data = swim_horizons(datafile, onilus)
+
+	data.combine_horizons('lda_surf_EP', 'plains_surf_EP', 'all_surf')
+
+	data.estimate_epsilon_along_track_linear('lda_sub1_EP','all_surf',MOLA_file,filepath+'eps_lin_ext/',[],method='polyfit')
+#	data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
+#	data.estimate_epsilon_nearest_plains_elevation('lda_sub2_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
+#	data.estimate_epsilon_nearest_plains_elevation('lda_sub3_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
+#	data.estimate_epsilon_nearest_plains_elevation('lda_sub4_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
+
+	#data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','surf_EP',filepath)
+	#data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
+	#data.depth_correct('up_sub1_EP','surf_EP',4,filepath)
+	#data.depth_correct('plains_sub1_EP','surf_EP',3.7,filepath)
+	#data.depth_correct('plains_sub1_EP','surf_EP',5.2,filepath)
