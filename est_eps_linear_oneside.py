@@ -22,9 +22,9 @@ def main():
 		print()
 		print('ERROR: Incorrect number of args (4 expected)')
 		print()
-		print('Usage: "python ./est_eps_ATM.py {horizon file} {region} {sub_horiz} {surf_horiz}')
+		print('Usage: "python ./est_eps_linear_oneside.py {horizon file} {region} {sub_horiz} {surf_horiz}')
 		print('horizon file = Seisware Export')
-		print('region = onilus, utopia, arcadia, or acidalia')
+		print('region = onilus, utopia, arcadia, acidalia, or box[1-7]')
 		print('sub_horiz = subsurface horizon')
 		print('surf_horiz = surface horizon')
 		print()
@@ -43,10 +43,17 @@ def main():
 	if region == 'acidalia': region = acidalia
 	if region == 'utopia': region = utopia
 	if region == 'arcadia': region = arcadia
+	if region == 'e_hellas': region = e_hellas
+	if region == 'box2': region = box2
+	if region == 'sirenum': region = sirenum
+	if region == 'chryse': region = chryse
+	if region == 'tharsis_tempe': region = tharsis_tempe
+	if region == 'w_hellas': region = w_hellas
+	if region == 'cimmeria': region = cimmeria
 
 	data = swim_horizons(horiz_file, region)
 
-	file_path = os.path.dirname(horiz_file) + '/Dielectric_ATM/'
+	file_path = os.path.dirname(horiz_file) + '/Dielectric_Estimate/'
 
 	data.estimate_epsilon_along_track_MOLA_minima(sub_horiz, surf_horiz, MOLA_file, file_path, orbit_list)
 
