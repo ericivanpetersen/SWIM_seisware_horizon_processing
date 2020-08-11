@@ -446,7 +446,7 @@ def estimate_epsilon_MOLA_polyfit(orbit, trace, lat, lon, TWT_surf, TWT_sub, MOL
 		plt.plot(trace, z_sub, 'b')
 		plt.legend(['Surface', 'Subsurface, eps=1', 'Flat Base', 'Sloped Base'])
 		plt.ylabel('Elevation (m)')
-		plt.axis([np.amin(lat), np.amax(lat), np.nanmin(z_sub_eps1)-50, np.nanmax(z_surf)+50])
+		plt.axis([np.amin(trace), np.amax(trace), np.nanmin(z_sub_eps1)-50, np.nanmax(z_surf)+50])
 		plt.subplot(212)
 		plt.plot(trace, eps_flat, 'r*')
 		plt.plot( trace, epsilon, 'b*')

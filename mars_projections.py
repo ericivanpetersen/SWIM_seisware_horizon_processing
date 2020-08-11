@@ -11,7 +11,18 @@ utopia = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPH
 
 ## Albers Equal-Area Projections Defined for SWIM 2.0 Study regions in Seisware Projects:
 box2 = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",95],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",95],UNIT["Meter",1]]'
-
+w_hellas = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",35],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",35],UNIT["Meter",1]]'
+tharsis_tempe = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",-102.5],PARAMETER["Standard_Parallel_1",27.5],PARAMETER["Standard_Parallel_2",57.5],PARAMETER["Latitude_Of_Center",45],PARAMETER["Longitude_Of_Center",-102.5],UNIT["Meter",1]]'
+sirenum = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",-140],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",-140],UNIT["Meter",1]]'
+cimmeria = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",150],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",150],UNIT["Meter",1]]'
+chryse = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",-50],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",-50],UNIT["Meter",1]]'
+# Box number aliases:
+e_hellas = box2
+box1 = w_hellas
+box3 = cimmeria
+box4 = sirenum
+box5 = tharsis_tempe
+box6 = chryse
 
 # The Classic Mars 2000 Geographic Coordinate System:
 mars_2000 = 'GEOGCS["Mars 2000",DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396190.0,169.89444722361179]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]]'
