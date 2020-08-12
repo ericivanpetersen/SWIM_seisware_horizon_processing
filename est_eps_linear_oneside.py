@@ -55,7 +55,7 @@ def main():
 
 	file_path = os.path.dirname(horiz_file) + '/Dielectric_Estimate/'
 
-	data.estimate_epsilon_along_track_MOLA_minima(sub_horiz, surf_horiz, MOLA_file, file_path, orbit_list)
+	data.estimate_epsilon_along_track_linear(sub_horiz, surf_horiz, MOLA_file, file_path, orbit_list, method="polyfit")
 
 if __name__ == '__main__':
 	main()
