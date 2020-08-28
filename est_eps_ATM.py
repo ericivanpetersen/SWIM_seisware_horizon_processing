@@ -31,7 +31,7 @@ def main():
 		sys.exit(1)
 
 	horiz_file = sys.argv[1]
-	region = sys.argv[2]
+	region_name = sys.argv[2]
 	sub_horiz = sys.argv[3]
 	surf_horiz = sys.argv[4]
 	if len(sys.argv) > 5:
@@ -39,10 +39,8 @@ def main():
 	else:
 		orbit_list = []
 	
-	if region == 'onilus': region = onilus
-	if region == 'acidalia': region = acidalia
-	if region == 'utopia': region = utopia
-	if region == 'arcadia': region = arcadia
+	# Define region projection:
+	region = proj_dict[region_name]
 
 	data = swim_horizons(horiz_file, region)
 
