@@ -362,16 +362,16 @@ if __name__ == '__main__':
 	data = swim_horizons(datafile, box2)
 #	data = swim_horizons(datafile, onilus)
 
-	data.combine_horizons('lda_surf_EP', 'plains_surf_EP', 'all_surf')
+	#data.combine_horizons('lda_surf_EP', 'plains_surf_EP', 'all_surf')
 
-	data.estimate_epsilon_along_track_linear('lda_sub1_EP','all_surf',MOLA_file,filepath+'eps_lin_ext/',[],method='polyfit')
+	#data.estimate_epsilon_along_track_linear('lda_sub1_EP','all_surf',MOLA_file,filepath+'eps_lin_ext/',[],method='polyfit')
 #	data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
 #	data.estimate_epsilon_nearest_plains_elevation('lda_sub2_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
 #	data.estimate_epsilon_nearest_plains_elevation('lda_sub3_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
 #	data.estimate_epsilon_nearest_plains_elevation('lda_sub4_EP','lda_surf_EP','plains_surf_EP',filepath+'eps/')
 
 	#data.estimate_epsilon_nearest_plains_elevation('lda_sub1_EP','lda_surf_EP','surf_EP',filepath)
-	#data.depth_correct('lda_sub1_EP','lda_surf_EP',3, filepath)
+	data.depth_correct('lda_sub1_EP','lda_surf_EP',2.867, filepath)
 	#data.depth_correct('up_sub1_EP','surf_EP',4,filepath)
 	#data.depth_correct('plains_sub1_EP','surf_EP',3.7,filepath)
 	#data.depth_correct('plains_sub1_EP','surf_EP',5.2,filepath)

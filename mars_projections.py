@@ -17,6 +17,22 @@ sirenum = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SP
 cimmeria = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",150],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",150],UNIT["Meter",1]]'
 chryse = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",-50],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",-50],UNIT["Meter",1]]'
 argyre = 'PROJCS["Mars_Albers_AUTO", GEOGCS["Mars 2000", DATUM["D_Mars_2000",SPHEROID["Mars_2000_IAU_IAG",3396000.0,169.8]],PRIMEM["Greenwich",0],UNIT["Decimal_Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0],PARAMETER["False_Northing",0],PARAMETER["Central_Meridian",-50],PARAMETER["Standard_Parallel_1",-27.5],PARAMETER["Standard_Parallel_2",-57.5],PARAMETER["Latitude_Of_Center",-45],PARAMETER["Longitude_Of_Center",-50],UNIT["Meter",1]]'
+
+# Projections Dictionary:
+proj_dict = {}
+proj_dict['onilus'] = onilus
+proj_dict['acidalia'] = acidalia
+proj_dict['arcadia'] = arcadia
+proj_dict['utopia'] = utopia
+proj_dict['box2'] = box2
+proj_dict['e_hellas'] = box2
+proj_dict['w_hellas'] = w_hellas
+proj_dict['tharsis_tempe'] = tharsis_tempe
+proj_dict['sirenum'] = sirenum
+proj_dict['cimmeria'] = cimmeria
+proj_dict['chryse'] = chryse
+proj_dict['argyre'] = argyre
+
 # Box number aliases:
 e_hellas = box2
 box1 = w_hellas
